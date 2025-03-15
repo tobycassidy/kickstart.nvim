@@ -848,20 +848,86 @@ require('lazy').setup({
     end,
   },
 
-  { -- You can easily change to a different colorscheme.
-    -- Change the name of the colorscheme plugin below, and then
-    -- change the command in the config to whatever the name of that colorscheme is.
-    --
-    -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
-    'folke/tokyonight.nvim',
-    priority = 1000, -- Make sure to load this before all the other start plugins.
-    init = function()
-      -- Load the colorscheme here.
-      -- Like many other themes, this one has different styles, and you could load
-      -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'tokyonight-night'
+  -- { -- You can easily change to a different colorscheme.
+  --   --   -- Change the name of the colorscheme plugin below, and then
+  --   --   -- change the command in the config to whatever the name of that colorscheme is.
+  --   --   --
+  --   --   -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
+  --   'folke/tokyonight.nvim',
+  --   -- 'sainnhe/everforest',
+  --   -- 'AlexvZyl/nordic.nvim',
+  --   priority = 1000, -- Make sure to load this before all the other start plugins.
+  --   init = function()
+  --     -- Load the colorscheme here.
+  --     -- Like many other themes, this one has different styles, and you could load
+  --     -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
+  --     -- vim.cmd.colorscheme 'nordic'
+  --     -- vim.cmd.colorscheme 'everforest'
+  --     vim.cmd.colorscheme 'tokyonight-night'
+  --     -- You can configure highlights by doing something like:
+  --     vim.cmd.hi 'Comment gui=none'
+  --   end,
+  -- },
+  {
+    'AlexvZyl/nordic.nvim',
+    priority = 1000, -- Ensure it loads first
+    config = function()
+      require('nordic').setup {
+        -- This callback can be used to override the colors used in the base palette.
+        on_palette = function(palette) end,
+        -- This callback can be used to override the colors used in the extended palette.
+        after_palette = function(palette) end,
+        -- This callback can be used to override highlights before they are applied.
+        on_highlight = function(highlights, palette) end,
+        -- Enable bold keywords.
+        bold_keywords = false,
+        -- Enable italic comments.
+        italic_comments = true,
+        -- Enable editor background transparency.
+        transparent = {
+          -- Enable transparent background.
+          bg = false,
+          -- Enable transparent background for floating windows.
+          float = false,
+        },
+        -- Enable brighter float border.
+        bright_border = false,
+        -- Reduce the overall amount of blue in the theme (diverges from base Nord).
+        reduced_blue = false,
+        -- Swap the dark background with the normal one.
+        swap_backgrounds = false,
+        -- Cursorline options.  Also includes visual/selection.
+        cursorline = {
+          -- Bold font in cursorline.
+          bold = true,
+          -- Bold cursorline number.
+          bold_number = true,
+          -- Available styles: 'dark', 'light'.
+          theme = 'light',
+          -- Blending the cursorline bg with the buffer bg.
+          blend = 0.85,
+        },
+        noice = {
+          -- Available styles: `classic`, `flat`.
+          style = 'classic',
+        },
+        telescope = {
+          -- Available styles: `classic`, `flat`.
+          style = 'classic',
+        },
+        leap = {
+          -- Dims the backdrop when using leap.
+          dim_backdrop = false,
+        },
+        ts_context = {
+          -- Enables dark background for treesitter-context window
+          dark_background = true,
+        },
+      }
+      -- Load the colorscheme
+      vim.cmd.colorscheme 'nordic'
 
-      -- You can configure highlights by doing something like:
+      -- Optional: Adjust highlights
       vim.cmd.hi 'Comment gui=none'
     end,
   },
