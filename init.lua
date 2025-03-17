@@ -878,7 +878,10 @@ require('lazy').setup({
         -- This callback can be used to override the colors used in the extended palette.
         after_palette = function(palette) end,
         -- This callback can be used to override highlights before they are applied.
-        on_highlight = function(highlights, palette) end,
+        on_highlight = function(highlights, palette)
+          highlights.Delimiter = { fg = palette.fg, bold = true }
+        end,
+        -- on_highlight = function(highlights, palette) end,
         -- Enable bold keywords.
         bold_keywords = false,
         -- Enable italic comments.
