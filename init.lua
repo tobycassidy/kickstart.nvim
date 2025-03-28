@@ -721,11 +721,32 @@ require('lazy').setup({
           lsp_format = lsp_format_opt,
         }
       end,
+      formatters = {
+        ruff_format = {
+          command = 'ruff',
+          args = { 'format', '-' }, -- read from stdin
+          stdin = true, -- use standard input
+        },
+        ruff_lint = {
+          command = 'ruff',
+          args = {
+            'check',
+            '--fix',
+            '--stdin-filename',
+            '%:p',
+            '-',
+            '--unsafe-fixes',
+            '--extend-select',
+            'I',
+          },
+          stdin = true, -- use standard input
+        },
+      },
       formatters_by_ft = {
         lua = { 'stylua' },
-        -- Conform can also run multiple formatters sequentially
-        python = { 'isort', 'black' },
-        --
+        python = { 'ruff_format', 'ruff_lint' },
+        -- python = { 'isort', 'black' },
+
         -- You can use 'stop_after_first' to run the first available formatter from the list
         -- javascript = { "prettierd", "prettier", stop_after_first = true },
       },
