@@ -1,3 +1,5 @@
+-- lua/plugins/python_debugger.lua
+
 return {
   {
     'mfussenegger/nvim-dap',
@@ -13,7 +15,58 @@ return {
       local dap_python = require 'dap-python'
 
       local function setup_dap()
-        dapui.setup()
+        dapui.setup {
+          layouts = {
+            {
+              elements = {
+                -- Grouping these three makes sense for state inspection
+                { id = 'scopes', size = 0.6 }, -- Give scopes the most space in this panel
+                { id = 'stacks', size = 0.2 },
+                { id = 'watches', size = 0.2 },
+              },
+              size = 40,
+              position = 'left',
+            },
+            {
+              elements = { 'repl', 'console' },
+              size = 0.25,
+              position = 'bottom',
+            },
+            {
+              elements = { 'breakpoints' },
+              size = 20,
+              position = 'right',
+            },
+          },
+          render = {
+            max_value_lines = 100, -- Show more lines for expanded values
+          },
+          extensions = {
+            pandas_visualizer = {
+              render = function(dapui_node)
+                if dapui_node.variable.type ~= 'pandas.core.frame.DataFrame' then
+                  return nil
+                end
+
+                local expression = string.format(
+                  "print('Shape: ' .. repr(%s.shape) .. '\\n\\n' .. %s.head(10).to_markdown())",
+                  dapui_node.variable.name,
+                  dapui_node.variable.name
+                )
+                local result, bufnr = dap.repl.execute(expression)
+
+                if result.success then
+                  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+                  vim.api.nvim_buf_delete(bufnr, { force = true })
+                  return lines
+                else
+                  return { 'Error fetching DataFrame view' }
+                end
+              end,
+            },
+          },
+        }
+
         require('nvim-dap-virtual-text').setup {
           commented = true,
         }
@@ -28,14 +81,14 @@ return {
         })
 
         vim.fn.sign_define('DapBreakpointRejected', {
-          text = '', -- or "❌"
+          text = '',
           texthl = 'DiagnosticSignError',
           linehl = '',
           numhl = '',
         })
 
         vim.fn.sign_define('DapStopped', {
-          text = '', -- or "→"
+          text = '',
           texthl = 'DiagnosticSignWarn',
           linehl = 'Visual',
           numhl = 'DiagnosticSignWarn',
@@ -43,6 +96,13 @@ return {
 
         dap.listeners.after.event_initialized['dapui_config'] = function()
           dapui.open()
+        end
+
+        dap.listeners.before.event_terminated['dapui_config'] = function()
+          dapui.close()
+        end
+        dap.listeners.before.event_exited['dapui_config'] = function()
+          dapui.close()
         end
       end
 
