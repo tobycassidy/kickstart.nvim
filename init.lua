@@ -673,7 +673,7 @@ require('lazy').setup({
       local servers = {
         -- clangd = {},
         -- gopls = {},
-        -- pyright = {},
+        pyright = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
@@ -761,14 +761,36 @@ require('lazy').setup({
           return nil
         else
           return {
-            timeout_ms = 500,
+            timeout_ms = 5000,
             lsp_format = 'fallback',
           }
         end
       end,
+      formatters = {
+        ruff_format = {
+          command = 'ruff',
+          args = { 'format', '-' }, -- read from stdin
+          stdin = true, -- use standard input
+        },
+        ruff_lint = {
+          command = 'ruff',
+          args = {
+            'check',
+            '--fix',
+            '--stdin-filename',
+            '%:p',
+            '-',
+            '--unsafe-fixes',
+            '--extend-select',
+            'I',
+          },
+          stdin = true, -- use standard input
+        },
+      },
       formatters_by_ft = {
         lua = { 'stylua' },
         -- Conform can also run multiple formatters sequentially
+        python = { 'ruff_format', 'ruff_lint' },
         -- python = { "isort", "black" },
         --
         -- You can use 'stop_after_first' to run the first available formatter from the list
@@ -875,28 +897,94 @@ require('lazy').setup({
       signature = { enabled = true },
     },
   },
-
-  { -- You can easily change to a different colorscheme.
-    -- Change the name of the colorscheme plugin below, and then
-    -- change the command in the config to whatever the name of that colorscheme is.
-    --
-    -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
-    'folke/tokyonight.nvim',
-    priority = 1000, -- Make sure to load this before all the other start plugins.
+  {
+    'AlexvZyl/nordic.nvim',
+    priority = 1000, -- Ensure it loads first
     config = function()
-      ---@diagnostic disable-next-line: missing-fields
-      require('tokyonight').setup {
-        styles = {
-          comments = { italic = false }, -- Disable italics in comments
+      require('nordic').setup {
+        -- This callback can be used to override the colors used in the base palette.
+        on_palette = function(palette) end,
+        -- This callback can be used to override the colors used in the extended palette.
+        after_palette = function(palette) end,
+        -- This callback can be used to override highlights before they are applied.
+        on_highlight = function(highlights, palette)
+          highlights.Delimiter = { fg = palette.fg, bold = true }
+        end,
+        -- on_highlight = function(highlights, palette) end,
+        -- Enable bold keywords.
+        bold_keywords = false,
+        -- Enable italic comments.
+        italic_comments = true,
+        -- Enable editor background transparency.
+        transparent = {
+          -- Enable transparent background.
+          bg = false,
+          -- Enable transparent background for floating windows.
+          float = false,
+        },
+        -- Enable brighter float border.
+        bright_border = false,
+        -- Reduce the overall amount of blue in the theme (diverges from base Nord).
+        reduced_blue = false,
+        -- Swap the dark background with the normal one.
+        swap_backgrounds = false,
+        -- Cursorline options.  Also includes visual/selection.
+        cursorline = {
+          -- Bold font in cursorline.
+          bold = true,
+          -- Bold cursorline number.
+          bold_number = true,
+          -- Available styles: 'dark', 'light'.
+          theme = 'light',
+          -- Blending the cursorline bg with the buffer bg.
+          blend = 0.85,
+        },
+        noice = {
+          -- Available styles: `classic`, `flat`.
+          style = 'classic',
+        },
+        telescope = {
+          -- Available styles: `classic`, `flat`.
+          style = 'classic',
+        },
+        leap = {
+          -- Dims the backdrop when using leap.
+          dim_backdrop = false,
+        },
+        ts_context = {
+          -- Enables dark background for treesitter-context window
+          dark_background = true,
         },
       }
+      -- Load the colorscheme
+      vim.cmd.colorscheme 'nordic'
 
-      -- Load the colorscheme here.
-      -- Like many other themes, this one has different styles, and you could load
-      -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'tokyonight-night'
+      -- Optional: Adjust highlights
+      vim.cmd.hi 'Comment gui=none'
     end,
   },
+
+  -- { -- You can easily change to a different colorscheme.
+  --   -- Change the name of the colorscheme plugin below, and then
+  --   -- change the command in the config to whatever the name of that colorscheme is.
+  --   --
+  --   -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
+  --   'folke/tokyonight.nvim',
+  --   priority = 1000, -- Make sure to load this before all the other start plugins.
+  --   config = function()
+  --     ---@diagnostic disable-next-line: missing-fields
+  --     require('tokyonight').setup {
+  --       styles = {
+  --         comments = { italic = false }, -- Disable italics in comments
+  --       },
+  --     }
+  --
+  --     -- Load the colorscheme here.
+  --     -- Like many other themes, this one has different styles, and you could load
+  --     -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
+  --     vim.cmd.colorscheme 'tokyonight-night'
+  --   end,
+  -- },
 
   -- Highlight todo, notes, etc in comments
   { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
@@ -974,17 +1062,17 @@ require('lazy').setup({
   --  Uncomment any of the lines below to enable them (you will need to restart nvim).
   --
   -- require 'kickstart.plugins.debug',
-  -- require 'kickstart.plugins.indent_line',
+  require 'kickstart.plugins.indent_line',
   -- require 'kickstart.plugins.lint',
-  -- require 'kickstart.plugins.autopairs',
-  -- require 'kickstart.plugins.neo-tree',
-  -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
+  require 'kickstart.plugins.autopairs',
+  require 'kickstart.plugins.neo-tree',
+  require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
   --
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
-  -- { import = 'custom.plugins' },
+  { import = 'custom.plugins' },
   --
   -- For additional information with loading, sourcing and examples see `:help lazy.nvim-🔌-plugin-spec`
   -- Or use telescope!
