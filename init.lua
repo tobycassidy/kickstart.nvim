@@ -792,7 +792,6 @@ require('lazy').setup({
         -- Conform can also run multiple formatters sequentially
         python = { 'ruff_format', 'ruff_lint' },
         -- python = { "isort", "black" },
-        --
         -- You can use 'stop_after_first' to run the first available formatter from the list
         -- javascript = { "prettierd", "prettier", stop_after_first = true },
       },
@@ -958,7 +957,7 @@ require('lazy').setup({
       }
       -- Load the colorscheme
       vim.cmd.colorscheme 'nordic'
-
+        
       -- Optional: Adjust highlights
       vim.cmd.hi 'Comment gui=none'
     end,
