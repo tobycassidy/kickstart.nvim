@@ -12,7 +12,6 @@ return {
           vim.keymap.set(mode, l, r, opts)
         end
 
-        -- Navigation
         map('n', ']c', function()
           if vim.wo.diff then
             vim.cmd.normal { ']c', bang = true }
@@ -29,7 +28,6 @@ return {
           end
         end, { desc = 'Jump to previous git [c]hange' })
 
-        -- Actions (your existing actions are here)
         map('v', '<leader>hs', function()
           gitsigns.stage_hunk { vim.fn.line '.', vim.fn.line 'v' }
         end, { desc = 'git [s]tage hunk' })
@@ -50,10 +48,6 @@ return {
         map('n', '<leader>tb', gitsigns.toggle_current_line_blame, { desc = '[T]oggle git show [b]lame line' })
         map('n', '<leader>td', gitsigns.toggle_deleted, { desc = '[T]oggle git show [d]eleted' })
 
-        -- ##################################################################
-        -- ## NEW: Difftool and Mergetool Functionality                    ##
-        -- ##################################################################
-
         local function select_file(files, prompt, callback)
           if vim.tbl_isempty(files) then
             vim.notify(prompt .. ' has no files to view.', vim.log.levels.INFO, { title = 'Git' })
@@ -66,7 +60,6 @@ return {
           end)
         end
 
-        -- Difftool function
         local function diff_against_branch()
           local branch = vim.fn.input 'Diff against branch: '
           if not branch or branch == '' then
@@ -74,15 +67,11 @@ return {
           end
           local files = vim.fn.systemlist('git diff --name-only ' .. branch)
           select_file(files, 'Changed files', function(file)
-            -- === THIS IS THE FIX ===
-            -- First, open the file from the working tree.
             vim.cmd.edit(file)
-            -- Then, use gitsigns to diff it against the version in the target branch.
             require('gitsigns').diffthis(branch)
           end)
         end
 
-        -- Mergetool function
         local function resolve_conflicts()
           local files = vim.fn.systemlist 'git diff --name-only --diff-filter=U'
           select_file(files, 'Conflicting files', function(file)
@@ -90,23 +79,49 @@ return {
           end)
         end
 
-        -- Keymaps for the new functionality (globally mapped)
         vim.keymap.set('n', '<leader>gvd', diff_against_branch, { desc = '[V]iew [D]iff against branch' })
         vim.keymap.set('n', '<leader>gvm', resolve_conflicts, { desc = '[V]iew [M]erge conflicts' })
 
-        -- Keymaps for resolving conflicts (buffer-local)
+        -- This function stages the correct hunk AND updates the buffer to match
+        local function resolve_and_apply_hunk(version)
+          -- Find which line to stage based on 'ours' or 'theirs'
+          local start_marker = vim.fn.search('^<<<<<<<', 'bnW')
+          if start_marker == 0 then
+            vim.notify('Not inside a conflict.', vim.log.levels.WARN, { title = 'Gitsigns' })
+            return
+          end
+
+          local line_to_stage
+          if version == 'ours' then
+            line_to_stage = start_marker + 1
+          else -- 'theirs'
+            local original_cursor_pos = vim.api.nvim_win_get_cursor(0)
+            vim.api.nvim_win_set_cursor(0, { start_marker, 0 })
+            local middle_marker = vim.fn.search('^=======', 'nW')
+            vim.api.nvim_win_set_cursor(0, original_cursor_pos)
+            if middle_marker == 0 then
+              vim.notify('Could not find middle marker for conflict.', vim.log.levels.WARN, { title = 'Gitsigns' })
+              return
+            end
+            line_to_stage = middle_marker + 1
+          end
+
+          gitsigns.stage_hunk { line_to_stage, line_to_stage }
+
+          local filepath = vim.fn.expand '%:p'
+          if filepath and filepath ~= '' then
+            vim.fn.system('git checkout -- ' .. vim.fn.shellescape(filepath))
+            vim.cmd 'checktime'
+          end
+        end
+
         map('n', '<leader>hco', function()
-          gitsigns.select_hunk 'ours'
-        end, { desc = 'Choose [O]urs' })
+          resolve_and_apply_hunk 'ours'
+        end, { desc = 'Choose & Apply [O]urs' })
+
         map('n', '<leader>hct', function()
-          gitsigns.select_hunk 'theirs'
-        end, { desc = 'Choose [T]heirs' })
-        map('n', '<leader>hcb', function()
-          gitsigns.select_hunk 'base'
-        end, { desc = 'Choose [B]ase' })
-        map('n', '<leader>hcn', function()
-          gitsigns.select_hunk 'none'
-        end, { desc = 'Choose [N]one' })
+          resolve_and_apply_hunk 'theirs'
+        end, { desc = 'Choose & Apply [T]heirs' })
       end,
     },
   },
