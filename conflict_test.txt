@@ -1,0 +1,3 @@
+This is a test file for merge conflicts.
+This is the original second line.
+This is the third line.
