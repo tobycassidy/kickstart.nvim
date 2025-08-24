@@ -1,3 +1,7 @@
 This is a test file for merge conflicts.
+<<<<<<< HEAD
 This is the change from branch A.
+=======
+This is the change from branch B. 
+>>>>>>> feature-b
 This is the third line.
