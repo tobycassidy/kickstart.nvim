@@ -1107,5 +1107,25 @@ require('lazy').setup({
   },
 })
 
+vim.api.nvim_create_autocmd('VimEnter', {
+  pattern = '*',
+  callback = function()
+    if vim.env.SSH_CLIENT then
+      vim.g.clipboard = {
+        name = 'OSC 52',
+        copy = {
+          ['+'] = require('vim.ui.clipboard.osc52').copy('+'),
+          ['*'] = require('vim.ui.clipboard.osc52').copy('*'),
+        },
+        paste = {
+          ['+'] = require('vim.ui.clipboard.osc52').paste('+'),
+          ['*'] = require('vim.ui.clipboard.osc52').paste('*'),
+        },
+      }
+      vim.notify('OSC52 clipboard enabled for SSH session.', vim.log.levels.INFO)
+    end
+  end,
+})
+
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
